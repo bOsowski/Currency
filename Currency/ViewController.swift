@@ -18,6 +18,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     var convertValue:Double = 0
     
+    var activeField: UITextField?
+    
     //MARK Outlets
     //@IBOutlet weak var convertedLabel: UILabel!
     
@@ -50,13 +52,48 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var jpyValueLabel: UILabel!
     @IBOutlet weak var jpyFlagLabel: UILabel!
     
+    @IBOutlet weak var baseTextBottomConstraint: NSLayoutConstraint!
     
+    var defaultBottomConstraint:CGFloat?
+
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let touch: UITouch? = touches.first
+        //location is relative to the current view
+        // do something with the touched point
+        if touch != baseTextField {
+            dismissKeyboard();
+        }
+    }
+    
+    func dismissKeyboard() {
+        view.endEditing(true)
+        
+        UIView.animate(withDuration: 0.25, animations: {
+            self.view.layoutIfNeeded()
+            self.baseTextBottomConstraint.constant = self.defaultBottomConstraint!
+        })
+    }
+
+    
+    func textFieldDidBeginEditing(_ textField: UITextField){
+        activeField = textField
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField){
+        activeField = nil
+    }
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
         // print("currencyDict has \(self.currencyDict.count) entries")
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        defaultBottomConstraint = baseTextBottomConstraint.constant
+        
         
         // create currency dictionary
         self.createCurrencyDictionary()
@@ -85,6 +122,34 @@ class ViewController: UIViewController, UITextFieldDelegate {
         self.convert(self)
     }
     
+    @objc func keyboardWillShow(notification:NSNotification){
+        if let info = notification.userInfo{
+        let rect:CGRect = info["UIKeyboardFrameEndUserInfoKey"] as! CGRect
+            
+        self.view.layoutIfNeeded()
+            
+            UIView.animate(withDuration: 0.25, animations: {
+                self.view.layoutIfNeeded()
+                self.baseTextBottomConstraint.constant = rect.height + 20
+            })
+        }
+    }
+    
+    
+    
+    @objc func keybordWillHide(notification:NSNotification){
+        if let info = notification.userInfo{
+            let rect:CGRect = info["UIKeyboardFrameEndUserInfoKey"] as! CGRect
+            
+            self.view.layoutIfNeeded()
+            
+            UIView.animate(withDuration: 0.25, animations: {
+                self.view.layoutIfNeeded()
+                self.baseTextBottomConstraint.constant = rect.height + 20
+            })
+        }
+    }
+
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -109,26 +174,31 @@ class ViewController: UIViewController, UITextFieldDelegate {
             gbpValueLabel.text = String(format: "%.02f", c.rate)
             gbpFlagLabel.text = c.flag
         }
+        //USD
         if let c = currencyDict["USD"]{
             usdSymbolLabel.text = c.symbol
             usdValueLabel.text = String(format: "%.02f", c.rate)
             usdFlagLabel.text = c.flag
         }
+        //PLN
         if let c = currencyDict["PLN"]{
             plnSymbolLabel.text = c.symbol
             plnValueLabel.text = String(format: "%.02f", c.rate)
             plnFlagLabel.text = c.flag
         }
+        //RUB
         if let c = currencyDict["RUB"]{
             rubSymbolLabel.text = c.symbol
             rubValueLabel.text = String(format: "%.02f", c.rate)
             rubFlagLabel.text = c.flag
         }
+        //CNY
         if let c = currencyDict["CNY"]{
             cnySymbolLabel.text = c.symbol
             cnyValueLabel.text = String(format: "%.02f", c.rate)
             cnyFlagLabel.text = c.flag
         }
+        //JPY
         if let c = currencyDict["JPY"]{
             jpySymbolLabel.text = c.symbol
             jpyValueLabel.text = String(format: "%.02f", c.rate)
@@ -183,6 +253,22 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                 let c:Currency  = self.currencyDict["GBP"]!
                                 c.rate = rate!
                                 self.currencyDict["GBP"] = c
+                            case "PLN":
+                                let c:Currency  = self.currencyDict["PLN"]!
+                                c.rate = rate!
+                                self.currencyDict["PLN"] = c
+                            case "RUB":
+                                let c:Currency  = self.currencyDict["RUB"]!
+                                c.rate = rate!
+                                self.currencyDict["RUB"] = c
+                            case "CNY":
+                                let c:Currency  = self.currencyDict["CNY"]!
+                                c.rate = rate!
+                                self.currencyDict["CNY"] = c
+                            case "JPY":
+                                let c:Currency  = self.currencyDict["JPY"]!
+                                c.rate = rate!
+                                self.currencyDict["JPY"] = c
                             default:
                                 print("Ignoring currency: \(String(describing: rate))")
                             }
@@ -210,6 +296,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBAction func convert(_ sender: Any) {
         var resultGBP = 0.0
         var resultUSD = 0.0
+        var resultPLN = 0.0
+        var resultRUB = 0.0
+        var resultCNY = 0.0
+        var resultJPY = 0.0
         
         if let euro = Double(baseTextField.text!) {
             convertValue = euro
@@ -219,6 +309,18 @@ class ViewController: UIViewController, UITextFieldDelegate {
             if let usd = self.currencyDict["USD"] {
                 resultUSD = convertValue * usd.rate
             }
+            if let pln = self.currencyDict["PLN"] {
+                resultPLN = convertValue * pln.rate
+            }
+            if let rub = self.currencyDict["RUB"] {
+                resultRUB = convertValue * rub.rate
+            }
+            if let cny = self.currencyDict["CNY"] {
+                resultCNY = convertValue * cny.rate
+            }
+            if let jpy = self.currencyDict["JPY"] {
+                resultJPY = convertValue * jpy.rate
+            }
         }
         //GBP
         
@@ -226,8 +328,15 @@ class ViewController: UIViewController, UITextFieldDelegate {
         
         gbpValueLabel.text = String(format: "%.02f", resultGBP)
         usdValueLabel.text = String(format: "%.02f", resultUSD)
+        plnValueLabel.text = String(format: "%.02f", resultPLN)
+        rubValueLabel.text = String(format: "%.02f", resultRUB)
+        cnyValueLabel.text = String(format: "%.02f", resultCNY)
+        jpyValueLabel.text = String(format: "%.02f", resultJPY)
+
     }
     
+    
+
     /*
      override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
      // Get the new view controller using segue.destinationViewController.
