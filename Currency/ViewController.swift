@@ -34,6 +34,22 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var usdValueLabel: UILabel!
     @IBOutlet weak var usdFlagLabel: UILabel!
     
+    @IBOutlet weak var plnSymbolLabel: UILabel!
+    @IBOutlet weak var plnValueLabel: UILabel!
+    @IBOutlet weak var plnFlagLabel: UILabel!
+    
+    @IBOutlet weak var rubSymbolLabel: UILabel!
+    @IBOutlet weak var rubValueLabel: UILabel!
+    @IBOutlet weak var rubFlagLabel: UILabel!
+    
+    @IBOutlet weak var cnySymbolLabel: UILabel!
+    @IBOutlet weak var cnyValueLabel: UILabel!
+    @IBOutlet weak var cnyFlagLabel: UILabel!
+    
+    @IBOutlet weak var jpySymbolLabel: UILabel!
+    @IBOutlet weak var jpyValueLabel: UILabel!
+    @IBOutlet weak var jpyFlagLabel: UILabel!
+    
     
     
     
@@ -79,6 +95,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
         //self.currencyDict[name] = c
         currencyDict["GBP"] = Currency(name:"GBP", rate:1, flag:"🇬🇧", symbol: "£")
         currencyDict["USD"] = Currency(name:"USD", rate:1, flag:"🇺🇸", symbol: "$")
+        currencyDict["PLN"] = Currency(name:"PLN", rate:1, flag:"🇵🇱", symbol: "zł")
+        currencyDict["RUB"] = Currency(name:"RUB", rate:1, flag:"🇷🇺", symbol: "₽")
+        currencyDict["CNY"] = Currency(name:"CNY", rate:1, flag:"🇨🇳", symbol: "元")
+        currencyDict["JPY"] = Currency(name:"JPY", rate:1, flag:"🇯🇵", symbol: "¥")
+        
     }
     
     func displayCurrencyInfo() {
@@ -92,6 +113,26 @@ class ViewController: UIViewController, UITextFieldDelegate {
             usdSymbolLabel.text = c.symbol
             usdValueLabel.text = String(format: "%.02f", c.rate)
             usdFlagLabel.text = c.flag
+        }
+        if let c = currencyDict["PLN"]{
+            plnSymbolLabel.text = c.symbol
+            plnValueLabel.text = String(format: "%.02f", c.rate)
+            plnFlagLabel.text = c.flag
+        }
+        if let c = currencyDict["RUB"]{
+            rubSymbolLabel.text = c.symbol
+            rubValueLabel.text = String(format: "%.02f", c.rate)
+            rubFlagLabel.text = c.flag
+        }
+        if let c = currencyDict["CNY"]{
+            cnySymbolLabel.text = c.symbol
+            cnyValueLabel.text = String(format: "%.02f", c.rate)
+            cnyFlagLabel.text = c.flag
+        }
+        if let c = currencyDict["JPY"]{
+            jpySymbolLabel.text = c.symbol
+            jpyValueLabel.text = String(format: "%.02f", c.rate)
+            jpyFlagLabel.text = c.flag
         }
     }
     
