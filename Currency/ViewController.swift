@@ -119,7 +119,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
         // setup view mover
         baseTextField.delegate = self
         
-        self.convert(self)
+        
+
     }
     
     @objc func keyboardWillShow(notification:NSNotification){
@@ -208,8 +209,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     
     func getConversionTable() {
-        //var result = "<NOTHING>"
-        
         let urlStr:String = "https://api.fixer.io/latest"
         
         var request = URLRequest(url: URL(string: urlStr)!)
@@ -219,37 +218,27 @@ class ViewController: UIViewController, UITextFieldDelegate {
         indicator.center = view.center
         view.addSubview(indicator)
         indicator.startAnimating()
-        
-        NSURLConnection.sendAsynchronousRequest(request, queue: OperationQueue.main) { response, data, error in
-            
-            indicator.stopAnimating()
+
+        let session = URLSession.shared.dataTask(with: request) { data, response, error in
             
             if error == nil{
-                //print(response!)
+                print(response!)
                 
                 do {
                     let jsonDict = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers) as! [String:Any]
                     //print(jsonDict)
                     
                     if let ratesData = jsonDict["rates"] as? NSDictionary {
-                        //print(ratesData)
                         for rate in ratesData{
-                            //print("#####")
                             let name = String(describing: rate.key)
                             let rate = (rate.value as? NSNumber)?.doubleValue
-                            //var symbol:String
-                            //var flag:String
                             
                             switch(name){
                             case "USD":
-                                //symbol = "$"
-                                //flag = "🇺🇸"
                                 let c:Currency  = self.currencyDict["USD"]!
                                 c.rate = rate!
                                 self.currencyDict["USD"] = c
                             case "GBP":
-                                //symbol = "£"
-                                //flag = "🇬🇧"
                                 let c:Currency  = self.currencyDict["GBP"]!
                                 c.rate = rate!
                                 self.currencyDict["GBP"] = c
@@ -279,6 +268,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
                              */
                         }
                         self.lastUpdatedDate = Date()
+                        indicator.stopAnimating()
+                        self.convert(self)
                     }
                 }
                 catch let error as NSError{
@@ -290,6 +281,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
             }
             
         }
+        session.resume()
         
     }
     
@@ -300,6 +292,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         var resultRUB = 0.0
         var resultCNY = 0.0
         var resultJPY = 0.0
+
         
         if let euro = Double(baseTextField.text!) {
             convertValue = euro
@@ -333,6 +326,42 @@ class ViewController: UIViewController, UITextFieldDelegate {
         cnyValueLabel.text = String(format: "%.02f", resultCNY)
         jpyValueLabel.text = String(format: "%.02f", resultJPY)
 
+    }
+    
+    
+    @IBAction func refresh(_ sender: Any) {
+        var resultGBP = 0.0
+        var resultUSD = 0.0
+        var resultPLN = 0.0
+        var resultRUB = 0.0
+        var resultCNY = 0.0
+        var resultJPY = 0.0
+        
+        if let gbp = self.currencyDict["GBP"] {
+            resultGBP = convertValue * gbp.rate
+        }
+        if let usd = self.currencyDict["USD"] {
+            resultUSD = convertValue * usd.rate
+        }
+        if let pln = self.currencyDict["PLN"] {
+            resultPLN = convertValue * pln.rate
+        }
+        if let rub = self.currencyDict["RUB"] {
+            resultRUB = convertValue * rub.rate
+        }
+        if let cny = self.currencyDict["CNY"] {
+            resultCNY = convertValue * cny.rate
+        }
+        if let jpy = self.currencyDict["JPY"] {
+            resultJPY = convertValue * jpy.rate
+        }
+        
+        gbpValueLabel.text = String(format: "%.02f", resultGBP)
+        usdValueLabel.text = String(format: "%.02f", resultUSD)
+        plnValueLabel.text = String(format: "%.02f", resultPLN)
+        rubValueLabel.text = String(format: "%.02f", resultRUB)
+        cnyValueLabel.text = String(format: "%.02f", resultCNY)
+        jpyValueLabel.text = String(format: "%.02f", resultJPY)
     }
     
     
