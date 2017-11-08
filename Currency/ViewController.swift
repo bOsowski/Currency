@@ -20,8 +20,13 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     var activeField: UITextField?
     
+    var finishedFetching = false;
+    
     //MARK Outlets
     //@IBOutlet weak var convertedLabel: UILabel!
+    
+    @IBOutlet weak var loadingScreen: UIView!
+    
     
     @IBOutlet weak var baseSymbol: UILabel!
     @IBOutlet weak var baseTextField: UITextField!
@@ -59,8 +64,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         let touch: UITouch? = touches.first
-        //location is relative to the current view
-        // do something with the touched point
         if touch != baseTextField {
             dismissKeyboard();
         }
@@ -69,7 +72,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     func dismissKeyboard() {
         view.endEditing(true)
         
-        UIView.animate(withDuration: 0.25, animations: {
+        UIView.animate(withDuration: 0.5, animations: {
             self.view.layoutIfNeeded()
             self.baseTextBottomConstraint.constant = self.defaultBottomConstraint!
         })
@@ -87,6 +90,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        loadingScreen.isHidden = true;
+
         // Do any additional setup after loading the view, typically from a nib.
         
         // print("currencyDict has \(self.currencyDict.count) entries")
@@ -115,7 +120,6 @@ class ViewController: UIViewController, UITextFieldDelegate {
         // display currency info
         self.displayCurrencyInfo()
         
-        
         // setup view mover
         baseTextField.delegate = self
         
@@ -131,22 +135,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
             
             UIView.animate(withDuration: 0.25, animations: {
                 self.view.layoutIfNeeded()
-                self.baseTextBottomConstraint.constant = rect.height + 20
-            })
-        }
-    }
-    
-    
-    
-    @objc func keybordWillHide(notification:NSNotification){
-        if let info = notification.userInfo{
-            let rect:CGRect = info["UIKeyboardFrameEndUserInfoKey"] as! CGRect
-            
-            self.view.layoutIfNeeded()
-            
-            UIView.animate(withDuration: 0.25, animations: {
-                self.view.layoutIfNeeded()
-                self.baseTextBottomConstraint.constant = rect.height + 20
+                self.baseTextBottomConstraint.constant = rect.height - 50
             })
         }
     }
@@ -214,15 +203,17 @@ class ViewController: UIViewController, UITextFieldDelegate {
         var request = URLRequest(url: URL(string: urlStr)!)
         request.httpMethod = "GET"
         
-        let indicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+        /*let indicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
         indicator.center = view.center
         view.addSubview(indicator)
-        indicator.startAnimating()
+        indicator.startAnimating()*/
+        self.loadingScreen.isHidden = false;
+
 
         let session = URLSession.shared.dataTask(with: request) { data, response, error in
-            
+
             if error == nil{
-                print(response!)
+                //print(response!)
                 
                 do {
                     let jsonDict = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers) as! [String:Any]
@@ -232,6 +223,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
                         for rate in ratesData{
                             let name = String(describing: rate.key)
                             let rate = (rate.value as? NSNumber)?.doubleValue
+
                             
                             switch(name){
                             case "USD":
@@ -267,9 +259,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
                              self.currencyDict[name] = c
                              */
                         }
-                        self.lastUpdatedDate = Date()
-                        indicator.stopAnimating()
-                        self.convert(self)
+                        DispatchQueue.main.async {
+                            self.lastUpdatedDate = Date()
+                            self.convert(self)
+                        }
+
                     }
                 }
                 catch let error as NSError{
@@ -286,6 +280,8 @@ class ViewController: UIViewController, UITextFieldDelegate {
     }
     
     @IBAction func convert(_ sender: Any) {
+        loadingScreen.isHidden = true;
+
         var resultGBP = 0.0
         var resultUSD = 0.0
         var resultPLN = 0.0
@@ -330,38 +326,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
     
     
     @IBAction func refresh(_ sender: Any) {
-        var resultGBP = 0.0
-        var resultUSD = 0.0
-        var resultPLN = 0.0
-        var resultRUB = 0.0
-        var resultCNY = 0.0
-        var resultJPY = 0.0
-        
-        if let gbp = self.currencyDict["GBP"] {
-            resultGBP = convertValue * gbp.rate
-        }
-        if let usd = self.currencyDict["USD"] {
-            resultUSD = convertValue * usd.rate
-        }
-        if let pln = self.currencyDict["PLN"] {
-            resultPLN = convertValue * pln.rate
-        }
-        if let rub = self.currencyDict["RUB"] {
-            resultRUB = convertValue * rub.rate
-        }
-        if let cny = self.currencyDict["CNY"] {
-            resultCNY = convertValue * cny.rate
-        }
-        if let jpy = self.currencyDict["JPY"] {
-            resultJPY = convertValue * jpy.rate
-        }
-        
-        gbpValueLabel.text = String(format: "%.02f", resultGBP)
-        usdValueLabel.text = String(format: "%.02f", resultUSD)
-        plnValueLabel.text = String(format: "%.02f", resultPLN)
-        rubValueLabel.text = String(format: "%.02f", resultRUB)
-        cnyValueLabel.text = String(format: "%.02f", resultCNY)
-        jpyValueLabel.text = String(format: "%.02f", resultJPY)
+        getConversionTable()
     }
     
     
