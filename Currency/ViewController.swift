@@ -8,11 +8,11 @@
 
 import UIKit
 
-class ViewController: UIViewController, UITextFieldDelegate {
+class ViewController: UIViewController, UITextFieldDelegate, UIPickerViewDelegate, UIPickerViewDataSource {
     
     //MARK Model holders
     var currencyDict:Dictionary = [String:Currency]()
-    var currencyArray = [Currency]()
+    let currencyArray = ["EUR","USD", "GBP", "PLN", "RUB", "CNY", "JPY"]
     var baseCurrency:Currency = Currency.init(name:"EUR", rate:1, flag:"🇪🇺", symbol:"€")!
     var lastUpdatedDate:Date = Date()
     
@@ -28,9 +28,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var loadingScreen: UIView!
     
     
-    @IBOutlet weak var baseSymbol: UILabel!
+    @IBOutlet weak var pickerView: UIPickerView!
+    
+    
+    
     @IBOutlet weak var baseTextField: UITextField!
-    @IBOutlet weak var baseFlag: UILabel!
     @IBOutlet weak var lastUpdatedDateLabel: UILabel!
     
     @IBOutlet weak var gbpSymbolLabel: UILabel!
@@ -57,11 +59,39 @@ class ViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var jpyValueLabel: UILabel!
     @IBOutlet weak var jpyFlagLabel: UILabel!
     
+    @IBOutlet weak var eurSymbolLabel: UILabel!
+    @IBOutlet weak var eurValueLabel: UILabel!
+    @IBOutlet weak var eurFlagLabel: UILabel!
+    
+    
     @IBOutlet weak var baseTextBottomConstraint: NSLayoutConstraint!
     
     var defaultBottomConstraint:CGFloat?
 
+    
+    
+    
+    
 
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1;
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        baseCurrency.rate = (currencyDict[currencyArray[row]]?.rate)!
+        convert(self)
+        return currencyArray[row]
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return currencyArray.count
+    }
+    
+    
+    
+    
+    
+    
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         let touch: UITouch? = touches.first
         if touch != baseTextField {
@@ -102,15 +132,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
         
         // create currency dictionary
         self.createCurrencyDictionary()
-        
+
         // get latest currency values
         getConversionTable()
         convertValue = 1
-        
-        // set up base currency screen items
-        baseTextField.text = String(format: "%.02f", baseCurrency.rate)
-        baseSymbol.text = baseCurrency.symbol
-        baseFlag.text = baseCurrency.flag
         
         // set up last updated date
         let dateformatter = DateFormatter()
@@ -120,11 +145,14 @@ class ViewController: UIViewController, UITextFieldDelegate {
         // display currency info
         self.displayCurrencyInfo()
         
+
+        
+        
+        // set up base currency screen items
+        //baseTextField.text = String(format: "%.02f", baseCurrency!.rate)
+
         // setup view mover
         baseTextField.delegate = self
-        
-        
-
     }
     
     @objc func keyboardWillShow(notification:NSNotification){
@@ -148,13 +176,16 @@ class ViewController: UIViewController, UITextFieldDelegate {
     func createCurrencyDictionary(){
         //let c:Currency = Currency(name: name, rate: rate!, flag: flag, symbol: symbol)!
         //self.currencyDict[name] = c
+
         currencyDict["GBP"] = Currency(name:"GBP", rate:1, flag:"🇬🇧", symbol: "£")
         currencyDict["USD"] = Currency(name:"USD", rate:1, flag:"🇺🇸", symbol: "$")
         currencyDict["PLN"] = Currency(name:"PLN", rate:1, flag:"🇵🇱", symbol: "zł")
         currencyDict["RUB"] = Currency(name:"RUB", rate:1, flag:"🇷🇺", symbol: "₽")
         currencyDict["CNY"] = Currency(name:"CNY", rate:1, flag:"🇨🇳", symbol: "元")
         currencyDict["JPY"] = Currency(name:"JPY", rate:1, flag:"🇯🇵", symbol: "¥")
-        
+        currencyDict["JPY"] = Currency(name:"JPY", rate:1, flag:"🇯🇵", symbol: "¥")
+        currencyDict["EUR"] = Currency(name:"EUR", rate:1, flag:"🇪🇺", symbol: "€")
+
     }
     
     func displayCurrencyInfo() {
@@ -193,6 +224,11 @@ class ViewController: UIViewController, UITextFieldDelegate {
             jpySymbolLabel.text = c.symbol
             jpyValueLabel.text = String(format: "%.02f", c.rate)
             jpyFlagLabel.text = c.flag
+        }
+        if let c = currencyDict["EUR"]{
+            eurSymbolLabel.text = c.symbol
+            eurValueLabel.text = String(format: "%.02f", c.rate)
+            eurFlagLabel.text = c.flag
         }
     }
     
@@ -250,6 +286,10 @@ class ViewController: UIViewController, UITextFieldDelegate {
                                 let c:Currency  = self.currencyDict["JPY"]!
                                 c.rate = rate!
                                 self.currencyDict["JPY"] = c
+                            case "EUR":
+                                let c:Currency  = self.currencyDict["EUR"]!
+                                c.rate = rate!
+                                self.currencyDict["EUR"] = c
                             default:
                                 print("Ignoring currency: \(String(describing: rate))")
                             }
@@ -288,27 +328,30 @@ class ViewController: UIViewController, UITextFieldDelegate {
         var resultRUB = 0.0
         var resultCNY = 0.0
         var resultJPY = 0.0
-
+        var resultEUR = 0.0
         
-        if let euro = Double(baseTextField.text!) {
-            convertValue = euro
+        if let currencyToConvert = Double(baseTextField.text!) {
+            convertValue = currencyToConvert
             if let gbp = self.currencyDict["GBP"] {
-                resultGBP = convertValue * gbp.rate
+                resultGBP = convertValue * (gbp.rate/baseCurrency.rate)
             }
             if let usd = self.currencyDict["USD"] {
-                resultUSD = convertValue * usd.rate
+                resultUSD = convertValue * (usd.rate/baseCurrency.rate)
             }
             if let pln = self.currencyDict["PLN"] {
-                resultPLN = convertValue * pln.rate
+                resultPLN = convertValue * (pln.rate/baseCurrency.rate)
             }
             if let rub = self.currencyDict["RUB"] {
-                resultRUB = convertValue * rub.rate
+                resultRUB = convertValue * (rub.rate/baseCurrency.rate)
             }
             if let cny = self.currencyDict["CNY"] {
-                resultCNY = convertValue * cny.rate
+                resultCNY = convertValue * (cny.rate/baseCurrency.rate)
             }
             if let jpy = self.currencyDict["JPY"] {
-                resultJPY = convertValue * jpy.rate
+                resultJPY = convertValue * (jpy.rate/baseCurrency.rate)
+            }
+            if let eur = self.currencyDict["EUR"] {
+                resultEUR = convertValue * (eur.rate/baseCurrency.rate)
             }
         }
         //GBP
@@ -321,6 +364,7 @@ class ViewController: UIViewController, UITextFieldDelegate {
         rubValueLabel.text = String(format: "%.02f", resultRUB)
         cnyValueLabel.text = String(format: "%.02f", resultCNY)
         jpyValueLabel.text = String(format: "%.02f", resultJPY)
+        eurValueLabel.text = String(format: "%.02f", resultEUR)
 
     }
     
