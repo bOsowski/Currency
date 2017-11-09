@@ -181,7 +181,6 @@ class ViewController: UIViewController, UITextFieldDelegate, UIPickerViewDelegat
         currencyDict["RUB"] = Currency(name:"RUB", rate:1, flag:"🇷🇺", symbol: "₽")
         currencyDict["CNY"] = Currency(name:"CNY", rate:1, flag:"🇨🇳", symbol: "元")
         currencyDict["JPY"] = Currency(name:"JPY", rate:1, flag:"🇯🇵", symbol: "¥")
-        currencyDict["JPY"] = Currency(name:"JPY", rate:1, flag:"🇯🇵", symbol: "¥")
         currencyDict["EUR"] = Currency(name:"EUR", rate:1, flag:"🇪🇺", symbol: "€")
 
     }
