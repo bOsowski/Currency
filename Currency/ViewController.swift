@@ -78,8 +78,6 @@ class ViewController: UIViewController, UITextFieldDelegate, UIPickerViewDelegat
     }
     
     func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-        baseCurrency.rate = (currencyDict[currencyArray[row]]?.rate)!
-        convert(self)
         return currencyArray[row]
     }
     
@@ -329,6 +327,8 @@ class ViewController: UIViewController, UITextFieldDelegate, UIPickerViewDelegat
         var resultCNY = 0.0
         var resultJPY = 0.0
         var resultEUR = 0.0
+        
+        baseCurrency.rate = (currencyDict[currencyArray[pickerView.selectedRow(inComponent: 0)]]?.rate)!
         
         if let currencyToConvert = Double(baseTextField.text!) {
             convertValue = currencyToConvert
